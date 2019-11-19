@@ -1,2 +1,1 @@
-# school-procurements
-ProZorro, schools, map for parents
+#this is file in Artem's branch
