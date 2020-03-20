@@ -1,0 +1,2 @@
+TrainingProZorroForSchoolProject20162019.csv filter=lfs diff=lfs merge=lfs -text
+*.csv filter=lfs diff=lfs merge=lfs -text
