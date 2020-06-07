@@ -1,12 +1,75 @@
-import pandas 
+import pandas as pd 
+import numpy as np
+import re
 from parameters.filters_lists import *
+
+def classification_by_type(df, columns, priority, names):
+    given_df = df[:]
+    checked_priority = priority[::-1]
+    checked_names = names[::-1]
+    given_df['Тип закладу'] = "Невідомо"
+
+    for column in columns:
+        given_df[column + "_check"] = ""
+
+    for idx in range(len(checked_priority)):
+        checked_filter = checked_priority[idx]
+        for column in columns:
+            given_df[column + "_check"] = given_df[column].astype(str).str.contains(r'\b({})'.format('|'.join(checked_filter)),
+                case = False, na = False, regex = True)
+
+        checked_name = checked_names[idx]
+        given_df['Тип закладу'] = np.where(((given_df['Организатор_check'] == True) | (given_df['Тендер_check'] == True) | (given_df['ОписаниеТендера_check'] == True) | (given_df['Лот_check'] == True) | (given_df['Адрес поставки_check']) == True), checked_name, given_df['Тип закладу'])
+    return given_df
+
+# EXPERIMENTS WITH FUNCTION
+
+def classification_by_type_one_column(df, columns, priority, names):
+    given_df = df[:]
+    checked_priority = priority[::-1]
+    checked_names = names[::-1]
+    given_df['Тип закладу'] = "Невідомо"
+
+    for column in columns:
+        given_df[column + "_check"] = ""
+
+    for idx in range(len(checked_priority)):
+        checked_filter = checked_priority[idx]
+        for column in columns:
+            given_df[column + "_check"] = given_df[column].astype(str).str.contains(r'\b({})'.format('|'.join(checked_filter)),
+                case = False, na = False, regex = True)
+
+        checked_name = checked_names[idx]
+        given_df['Тип закладу'] = np.where(given_df['Организатор_check'] == True, checked_name, given_df['Тип закладу'])
+    return given_df
+
+
+def numeration_one_column(given_df, columns_to_numerate, regex):
+    for column in columns_to_numerate:
+        given_df['Номер'] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).apply(''.join)
+    return given_df
+
+
+def naming_one_column(given_df, columns_to_numerate, regex):
+    for column in columns_to_numerate:
+        given_df['Назва'] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[-1]
+    return given_df
+
+
+
+
+
+
+# ---- ----- ----- ------ ----- #
+
+
 
 def filter_dataframe(dataframe, filter_keywords, columns_to_check):
     filtered = []
     for column in columns_to_check:
             filtered.append(dataframe[dataframe[column].astype(str).str.contains(r'\b({})'.format('|'.join(filter_keywords)), 
             case = False, na = False, regex = True)])
-    df = pandas.concat(filtered).drop_duplicates()
+    df = pd.concat(filtered).drop_duplicates()
     print(f"{len(dataframe)} rows. filtered {len(df)}")
     return df
 
@@ -15,7 +78,7 @@ def filter_dataframe_strict(dataframe, filter_keywords, columns_to_check):
     for column in columns_to_check:
             filtered.append(dataframe[dataframe[column].astype(str).str.contains(r'\b({})\b'.format('|'.join(filter_keywords)), 
             case = False, na = False, regex = True)])
-    df = pandas.concat(filtered).drop_duplicates()
+    df = pd.concat(filtered).drop_duplicates()
     print(f"{len(dataframe)} rows, filtered: {len(df)}")
     return df
 
@@ -24,7 +87,7 @@ def filter_dataframe_drop(dataframe, filter_keywords, columns_to_check):
     for column in columns_to_check:
             filtered.append(dataframe[~dataframe[column].astype(str).str.contains(r'({})'.format('|'.join(filter_keywords)), 
             case = False, na = False, regex = True)])
-    df = pandas.concat(filtered).drop_duplicates()
+    df = pd.concat(filtered).drop_duplicates()
     print(f"Dropped rows: {len(dataframe)-len(df)}")
     return df
 
@@ -33,7 +96,7 @@ def filter_dataframe_inspect_before_drop(dataframe, filter_keywords, columns_to_
     for column in columns_to_check:
             filtered.append(dataframe[dataframe[column].astype(str).str.contains(r'({})'.format('|'.join(filter_keywords)), 
             case = False, na = False, regex = True)])
-    df = pandas.concat(filtered).drop_duplicates()
+    df = pd.concat(filtered).drop_duplicates()
     print(df.shape)
     return df
 

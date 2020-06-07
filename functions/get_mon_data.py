@@ -14,3 +14,9 @@ def negative_edrpou():
     edrpous = edropu_manual_list.edrpou.tolist()
     edrpous_str = list_convert_el_to_str(edrpous)
     return edrpous_str
+
+def get_mon_data():
+    edropu_manual_list = pandas.read_csv(path_positive_edrpou)
+    edrpous = edropu_manual_list.edrpou.tolist()
+    edrpous_str = list_convert_el_to_str(edrpous)
+    return edrpous_str
