@@ -3,6 +3,7 @@ import numpy as np
 import re
 from parameters.filters_lists import *
 
+
 def classification_by_type(df, columns, priority, names):
     given_df = df[:]
     checked_priority = priority[::-1]
@@ -19,10 +20,29 @@ def classification_by_type(df, columns, priority, names):
                 case = False, na = False, regex = True)
 
         checked_name = checked_names[idx]
-        given_df['Тип закладу'] = np.where(((given_df['Организатор_check'] == True) | (given_df['Тендер_check'] == True) | (given_df['ОписаниеТендера_check'] == True) | (given_df['Лот_check'] == True) | (given_df['Адрес поставки_check']) == True), checked_name, given_df['Тип закладу'])
+        given_df['Тип закладу'] = np.where((given_df['Организатор_check'] == True) | (given_df['Тендер_check'] == True) | (given_df['ОписаниеТендера_check'] == True) | (given_df['Лот_check'] == True) | (given_df['Адрес поставки_check'] == True), checked_name, given_df['Тип закладу'])
     return given_df
 
-# EXPERIMENTS WITH FUNCTION
+
+def classification_by_type_three_cols(df, columns, priority, names):
+    given_df = df[:]
+    checked_priority = priority[::-1]
+    checked_names = names[::-1]
+    given_df['Тип закладу'] = "Невідомо"
+
+    for column in columns:
+        given_df[column + "_check"] = ""
+
+    for idx in range(len(checked_priority)):
+        checked_filter = checked_priority[idx]
+        for column in columns:
+            given_df[column + "_check"] = given_df[column].astype(str).str.contains(r'({})'.format('|'.join(checked_filter)),
+                case = False, na = False, regex = True)
+
+        checked_name = checked_names[idx]
+        given_df['Тип закладу'] = np.where((given_df['Тендер_check'] == True) | (given_df['ОписаниеТендера_check'] == True) | (given_df['Лот_check'] == True), checked_name, given_df['Тип закладу'])
+    return given_df
+
 
 def classification_by_type_one_column(df, columns, priority, names):
     given_df = df[:]
@@ -49,13 +69,24 @@ def numeration_one_column(given_df, columns_to_numerate, regex):
         given_df['Номер'] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).apply(''.join)
     return given_df
 
+def numeration(given_df, columns_to_numerate, regex, action_mark):
+    for column in columns_to_numerate:
+        given_df[column + action_mark] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE)
+        given_df[column + '_' + action_mark] = [','.join(map(str, l)) for l in given_df[column + action_mark]]
+        given_df = given_df.drop([column + action_mark], axis=1)
+        given_df[column + '_' + action_mark + '_count'] = given_df[column + '_' + action_mark].str.count('№')
+    return given_df
 
 def naming_one_column(given_df, columns_to_numerate, regex):
     for column in columns_to_numerate:
         given_df['Назва'] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[-1]
     return given_df
 
-
+def naming(given_df, columns_to_name, regex, action_mark):
+    for column in columns_to_name:
+        given_df[column + '_' + action_mark] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[-1]
+        given_df[column + '_' + action_mark] = given_df[column + '_' + action_mark].replace(r'^\s*$', np.nan, regex=True)
+    return given_df
 
 
 
