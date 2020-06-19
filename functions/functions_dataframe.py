@@ -84,7 +84,7 @@ def naming_one_column(given_df, columns_to_numerate, regex):
 
 def naming(given_df, columns_to_name, regex, action_mark):
     for column in columns_to_name:
-        given_df[column + '_' + action_mark] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[-1]
+        given_df[column + '_' + action_mark] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[0]
         given_df[column + '_' + action_mark] = given_df[column + '_' + action_mark].replace(r'^\s*$', np.nan, regex=True)
     return given_df
 

@@ -108,28 +108,29 @@ filter_inshe = 'Інше'
 
 
 filter_priority = [
-    filter_shkola,
-    filter_nvk,
-    filter_gimnasium,
-    filter_liceum,
-    filter_specializovana,
-    filter_internat,
-    filter_kombinat,
-    filter_sanatorna,
-    filter_specializovana,
-    filter_specialna,
-    filter_sadik
-]
+        filter_nvk,
+        filter_gimnasium,
+        filter_liceum,
+        filter_specializovana,
+        filter_internat,
+        filter_kombinat,
+        filter_sanatorna,
+        filter_specializovana,
+        filter_specialna,
+        filter_sadik,
+        filter_shkola 
+    ]
+
 filter_name_priority = [
-    filter_shkola_name,
-    filter_nvk_name,
-    filter_gimnasium_name,
-    filter_liceum_name,
-    filter_specializovana_name,
-    filter_internat_name,
-    filter_kombinat_name,
-    filter_sanatorna_name,
-    filter_specializovana_name,
-    filter_specialna_name,
-    filter_sadik_name
-]
+        filter_nvk_name,
+        filter_gimnasium_name,
+        filter_liceum_name,
+        filter_specializovana_name,
+        filter_internat_name,
+        filter_kombinat_name,
+        filter_sanatorna_name,
+        filter_specializovana_name,
+        filter_specialna_name,
+        filter_sadik_name,
+        filter_shkola_name
+    ]
