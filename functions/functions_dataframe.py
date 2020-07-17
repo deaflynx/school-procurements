@@ -56,7 +56,7 @@ def classification_by_type_one_column(df, columns, priority, names):
     for idx in range(len(checked_priority)):
         checked_filter = checked_priority[idx]
         for column in columns:
-            given_df[column + "_check"] = given_df[column].astype(str).str.contains(r'\b({})'.format('|'.join(checked_filter)),
+            given_df[column + "_check"] = given_df[column].astype(str).str.contains(r'({})'.format('|'.join(checked_filter)),
                 case = False, na = False, regex = True)
 
         checked_name = checked_names[idx]
@@ -77,15 +77,57 @@ def numeration(given_df, columns_to_numerate, regex, action_mark):
         given_df[column + '_' + action_mark + '_count'] = given_df[column + '_' + action_mark].str.count('№')
     return given_df
 
+def long_numeration(df_step7, reg_number):
+    df_step7['ОписаниеТендера'] = df_step7['ОписаниеТендера'].fillna('')
+    df_step7_numerated = numeration(df_step7, ['Тендер', 'Лот', 'ОписаниеТендера'], reg_number, 'numeration')
+    df_step7_numerated['Номер'] = np.where(((df_step7_numerated['Тендер_numeration_count'] == 1) | (df_step7_numerated['Лот_numeration_count'] == 1)) & (df_step7_numerated['Лот_numeration_count'] == df_step7_numerated['Тендер_numeration_count']), df_step7_numerated['Лот_numeration'], 'Невідомо')
+    df_step7_numerated_lot_tender = df_step7_numerated[df_step7_numerated['Номер'] != 'Невідомо']
+    df_step7_numerated_undefined = df_step7_numerated[df_step7_numerated['Номер'] == 'Невідомо']
+    df_step7_numerated_lot = df_step7_numerated_undefined.copy()
+    df_step7_numerated_lot['Номер'] = np.where(df_step7_numerated_lot['Лот_numeration_count'] == 1, df_step7_numerated_lot['Лот_numeration'], 'Невідомо')
+    df_step7_numerated_undefined_2 = df_step7_numerated_lot[df_step7_numerated_lot['Номер'] == 'Невідомо']
+    df_step7_numerated_lot = df_step7_numerated_lot[df_step7_numerated_lot['Номер'] != 'Невідомо']
+    df_step7_numerated_opystendera = df_step7_numerated_undefined_2.copy()
+    df_step7_numerated_opystendera['Номер'] = np.where(df_step7_numerated_opystendera['ОписаниеТендера_numeration_count'] == 1, 
+                                                     df_step7_numerated_opystendera['ОписаниеТендера_numeration'], 'Невідомо')
+    df_step7_numerated_undefined_3 = df_step7_numerated_opystendera[df_step7_numerated_opystendera['Номер'] == 'Невідомо']
+    df_step7_numerated_opystendera = df_step7_numerated_opystendera[df_step7_numerated_opystendera['Номер'] != 'Невідомо']
+    df_step7_numerated_tender = df_step7_numerated_undefined_3.copy()
+    df_step7_numerated_tender['Номер'] = np.where(df_step7_numerated_tender['Тендер_numeration_count'] == 1, 
+                                                     df_step7_numerated_tender['Тендер_numeration'], 'Невідомо')
+    df_step7_numerated_undefined_4 = df_step7_numerated_tender[df_step7_numerated_tender['Номер'] == 'Невідомо']
+    df_step7_numerated_tender = df_step7_numerated_tender[df_step7_numerated_tender['Номер'] != 'Невідомо']
+    frames = [df_step7_numerated_lot_tender, df_step7_numerated_lot, df_step7_numerated_opystendera, df_step7_numerated_tender]
+    df_tenders_not_by_schools_numerated = pd.concat(frames)
+    return df_tenders_not_by_schools_numerated, df_step7_numerated_undefined_4
+
 def naming_one_column(given_df, columns_to_numerate, regex):
     for column in columns_to_numerate:
         given_df['Назва'] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[-1]
     return given_df
 
-def naming(given_df, columns_to_name, regex, action_mark):
+
+# Функція naming():
+# 1. у колонках columns_to_name шукає всі паттерни (слова у подвійних лапках) і створює для них дві нові колонки з суфіксами: 
+#    "_first" (відбирається перше зі зі знайденого масиву)
+#    "_last" (відбирається останнє зі зі знайденого масиву)
+# 2. Знайдені значення форматуються: видаляються символи "«»()
+# 3. Пусті клітинки перетворюються у NaN і перейменовуються у "Невідомо"
+
+def naming(given_df, columns_to_name, reg_double_quotes, action_mark):
     for column in columns_to_name:
-        given_df[column + '_' + action_mark] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[0]
-        given_df[column + '_' + action_mark] = given_df[column + '_' + action_mark].replace(r'^\s*$', np.nan, regex=True)
+        given_df[column + '_' + action_mark + "_first"] = given_df[column].str.findall(f"{reg_double_quotes}", flags = re.IGNORECASE).str[0].str[0]
+        given_df[column + '_' + action_mark + "_first"] = given_df[column + '_' + action_mark + "_first"].str.replace('"|«|»', '')
+        given_df[column + '_' + action_mark + "_first"] = given_df[column + '_' + action_mark + "_first"].str.replace('(', '')
+        given_df[column + '_' + action_mark + "_first"] = given_df[column + '_' + action_mark + "_first"].str.replace(')', '')
+        given_df[column + '_' + action_mark + "_first"] = given_df[column + '_' + action_mark + "_first"].replace(r'^\s*$', np.nan, regex=True)
+        given_df[column + '_' + action_mark + "_first"] = given_df[column + '_' + action_mark + "_first"].fillna('Невідомо')
+        given_df[column + '_' + action_mark + "_last"] = given_df[column].str.findall(f"{reg_double_quotes}", flags = re.IGNORECASE).str[0].str[-1]
+        given_df[column + '_' + action_mark + "_last"] = given_df[column + '_' + action_mark + "_last"].str.replace('"|«|»', '')
+        given_df[column + '_' + action_mark + "_last"] = given_df[column + '_' + action_mark + "_last"].str.replace('(', '')
+        given_df[column + '_' + action_mark + "_last"] = given_df[column + '_' + action_mark + "_last"].str.replace(')', '')
+        given_df[column + '_' + action_mark + "_last"] = given_df[column + '_' + action_mark + "_last"].replace(r'^\s*$', np.nan, regex=True)
+        given_df[column + '_' + action_mark + "_last"] = given_df[column + '_' + action_mark + "_last"].fillna('Невідомо')
     return given_df
 
 
