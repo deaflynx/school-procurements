@@ -3,16 +3,35 @@ import numpy as np
 import re
 from parameters.filters_lists import *
 
+from geopy.geocoders import GoogleV3
+from geopy.extra.rate_limiter import RateLimiter
+
+#---------- Фукнції для визначення координат ----------# 
+# get_coordinates()
+    # Використовується для визначення координат закладів за їх назвою.
+    
+def get_coordinates(df, target_column, new_column):
+    API = "AIzaSyBVrzpUWXjQTdE3ugrd6Iaon0QNQNCmPh4"
+    PATH_SC = "data/mon_data/expdata_sc.csv"
+    geolocator = GoogleV3(api_key=API)
+    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+    df[new_column] = df[target_column].apply(geocode)
+    df["Longitude"] = df[new_column].apply(lambda loc: loc.longitude if loc else "ERROR")
+    df["Latitude"] = df[new_column].apply(lambda loc: loc.latitude if loc else "ERROR")
+    return df
+    
+
+
 #---------- Фукнції для визначення типу закладу ----------# 
 
 # classification_by_type_one_column()
     # Використовується у Step 3 для класифікації навчальних закладів, які є замовниками і присвоєння типу.
     # Детальніше про типи див. у 'parameters/filter_lists.py'  
-def classification_by_type_one_column(df, columns, priority, names):
+def classification_by_type_one_column(df, columns, priority, names, new_column):
     given_df = df[:]
     checked_priority = priority[::-1]
     checked_names = names[::-1]
-    given_df['Тип закладу'] = "Невідомо"
+    given_df[new_column] = "Невідомо"
 
     for column in columns:
         given_df[column + "_check"] = ""
@@ -24,7 +43,22 @@ def classification_by_type_one_column(df, columns, priority, names):
                 case = False, na = False, regex = True)
 
         checked_name = checked_names[idx]
-        given_df['Тип закладу'] = np.where(given_df['Организатор_check'] == True, checked_name, given_df['Тип закладу'])
+        given_df[new_column] = np.where(given_df[column + '_check'] == True, checked_name, given_df[new_column])
+    return given_df
+
+def classification_by_type_city(df, columns, priority, names, new_column):
+    given_df = df[:]
+    checked_priority = priority[::-1]
+    checked_names = names[::-1]
+    given_df[new_column] = "Невідомо"
+    for column in columns:
+        given_df[column + "_check"] = ""
+        for idx in range(len(checked_priority)):
+            checked_filter = checked_priority[idx]
+            for column in columns:
+                given_df[column + "_check"] = (given_df[column].astype(str) == checked_filter)
+                checked_name = checked_names[idx]
+            given_df[new_column] = np.where(given_df[column + '_check'] == True, checked_name, given_df[new_column])
     return given_df
 
 
