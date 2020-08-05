@@ -46,6 +46,24 @@ def classification_by_type_one_column(df, columns, priority, names, new_column):
         given_df[new_column] = np.where(given_df[column + '_check'] == True, checked_name, given_df[new_column])
     return given_df
 
+def classification_by_type_one_column_2(df, columns, priority, names, new_column):
+    given_df = df[:]
+    checked_priority = priority[::-1]
+    checked_names = names[::-1]
+    given_df[new_column] = "Невідомо"
+
+    for column in columns:
+        given_df[column + "_check"] = ""
+
+    for idx in range(len(checked_priority)):
+        checked_filter = checked_priority[idx]
+        for column in columns:
+            given_df[column + "_check"] = (given_df[column] == checked_priority[idx])
+
+        checked_name = checked_names[idx]
+        given_df[new_column] = np.where(given_df[column + '_check'] == True, checked_name, given_df[new_column])
+    return given_df
+
 def classification_by_type_city(df, columns, priority, names, new_column):
     given_df = df[:]
     checked_priority = priority[::-1]
