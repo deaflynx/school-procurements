@@ -12,14 +12,12 @@ from geopy.extra.rate_limiter import RateLimiter
     
 def get_coordinates(df, target_column, new_column):
     API = "AIzaSyBVrzpUWXjQTdE3ugrd6Iaon0QNQNCmPh4"
-    PATH_SC = "data/mon_data/expdata_sc.csv"
     geolocator = GoogleV3(api_key=API)
     geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
     df[new_column] = df[target_column].apply(geocode)
     df["Longitude"] = df[new_column].apply(lambda loc: loc.longitude if loc else "ERROR")
     df["Latitude"] = df[new_column].apply(lambda loc: loc.latitude if loc else "ERROR")
     return df
-    
 
 
 #---------- Фукнції для визначення типу закладу ----------# 
@@ -241,3 +239,4 @@ def naming_one_column(given_df, columns_to_numerate, regex):
     for column in columns_to_numerate:
         given_df['Назва'] = given_df[column].str.findall(f"{regex}", flags = re.IGNORECASE).str[0].str[-1]
     return given_df    
+
